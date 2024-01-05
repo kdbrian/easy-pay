@@ -10,6 +10,9 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.UnsupportedEncodingException;
+import java.util.Base64;
+
 @Service
 public class AccessTokenGenerator {
 
@@ -31,25 +34,22 @@ public class AccessTokenGenerator {
         this.restTemplate = restTemplate;
     }
 
-    public String getAccessToken(){
+    public String getAccessToken() throws UnsupportedEncodingException {
         HttpHeaders headers = new HttpHeaders();
 
-        headers.setBasicAuth(consumerKey, consumerSecret);
+        var secret = consumerKey + ":" + consumerSecret;
+        byte[] bytes = secret.getBytes("ISO-8859-1");
+        String encoded = Base64.getEncoder().encodeToString(bytes);
+
+        headers.set("cache-control", "no-cache");
+        headers.set("authorization", "Basic "+encoded);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         // request
         HttpEntity<String> request= new HttpEntity<>(headers);
-
-        HttpEntity<String> response = restTemplate.exchange(
-                accessTokenUrl,
-                HttpMethod.GET,
-                request,
-                String.class
-        );
+        HttpEntity<String> response = restTemplate.exchange(accessTokenUrl, HttpMethod.GET, request, String.class);
 
         var token = response.getBody().split("\"");
-
-
         LOGGER.info(response.getBody());
 
         return token[3];
