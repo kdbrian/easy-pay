@@ -50,6 +50,7 @@ public class PaymentService {
                 .callBackURL("")
                 .build();
 
+        // bsnNo + passKey + timestamp
         var pwdStr = businessNumber + "hello-world-its-me#@24" + request.getTimestamp();
 
         String pwd = passwordEncoder.encode(pwdStr);

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/test")
+@RequestMapping("/")
 public class DemoController {
 
     private final AccessTokenGenerator generator;
@@ -15,6 +15,11 @@ public class DemoController {
     @Autowired
     public DemoController(AccessTokenGenerator generator) {
         this.generator = generator;
+    }
+
+    @GetMapping("/")
+    public String sayHi(){
+        return "Are you an admin.. :-( ";
     }
 
     @GetMapping("/generate-token")
