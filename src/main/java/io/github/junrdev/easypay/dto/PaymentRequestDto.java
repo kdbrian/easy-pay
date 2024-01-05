@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class PaymentRequestDto {
 
     private String phoneNumber;
+    private String businessCode;
     private String amount;
 
 }

@@ -1,18 +1,18 @@
 package io.github.junrdev.easypay.service;
 
-import io.github.junrdev.easypay.domain.model.PaymentResponse;
-import io.github.junrdev.easypay.domain.model.Paymentrequest;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import io.github.junrdev.easypay.domain.repo.TokenRepository;
 import io.github.junrdev.easypay.util.AccessTokenGenerator;
+import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.io.IOException;
+import java.util.Base64;
 
 @Service
 public class PaymentService {
@@ -41,33 +41,46 @@ public class PaymentService {
         this.restTemplate = restTemplate;
     }
 
-    public PaymentResponse makePayment(String businessNumber, String customerNumber, String amount) {
 
-        var request = Paymentrequest.builder()
-                .partyA(businessNumber)
-                .partyB(customerNumber)
-                .amount(amount)
-                .callBackURL("")
+    public String STKPushSimulation(String businessShortCode, String password, String timestamp, String transactionType, String amount, String phoneNumber, String partyA, String partyB, String callBackURL, String queueTimeOutURL, String accountReference, String transactionDesc) throws IOException {
+
+        JsonArray jsonArray = new JsonArray();
+
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("BusinessShortCode", businessShortCode);
+        jsonObject.addProperty("Password", password);
+        jsonObject.addProperty("Timestamp", timestamp);
+        jsonObject.addProperty("TransactionType", transactionType);
+        jsonObject.addProperty("Amount", amount);
+        jsonObject.addProperty("PhoneNumber", phoneNumber);
+        jsonObject.addProperty("PartyA", partyA);
+        jsonObject.addProperty("PartyB", partyB);
+        jsonObject.addProperty("CallBackURL", callBackURL);
+        jsonObject.addProperty("AccountReference", accountReference);
+        jsonObject.addProperty("QueueTimeOutURL", queueTimeOutURL);
+        jsonObject.addProperty("TransactionDesc", transactionDesc);
+
+        jsonArray.add(jsonObject);
+
+        String requestJson = jsonArray.toString().replaceAll("[\\[\\]]", "");
+
+        OkHttpClient client = new OkHttpClient();
+        String url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest";
+        MediaType mediaType = MediaType.parse("application/json");
+
+        RequestBody body = RequestBody.create(mediaType, requestJson);
+
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .addHeader("content-type", "application/json")
+                .addHeader("authorization", "Bearer " + tokenGenerator.getAccessToken())
+                .addHeader("cache-control", "no-cache")
                 .build();
 
-        // bsnNo + passKey + timestamp
-        var pwdStr = businessNumber + "hello-world-its-me#@24" + request.getTimestamp();
 
-        String pwd = passwordEncoder.encode(pwdStr);
-
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.setBasicAuth(consumerKey, consumerSecret);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-
-        HttpEntity<PaymentResponse> requestBody = new HttpEntity<>(headers);
-
-        return restTemplate.exchange(
-                "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-                HttpMethod.POST,
-                requestBody,
-                PaymentResponse.class
-        ).getBody();
+        Response response = client.newCall(request).execute();
+        System.out.println("Response : "+ response.body().string());
+        return response.body().string();
     }
 }
