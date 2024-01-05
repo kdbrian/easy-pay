@@ -1,0 +1,22 @@
+server:
+  port: 9001
+
+spring:
+
+  profiles:
+    # set active profile and add the values below
+    active: dev
+
+#  datasource:
+#    url: jdbc:mysql://localhost:3306/easypay
+#    username:
+#    password:
+#    # driver-class-name: com.mysql.jdbc.Driver
+#
+#  jpa:
+#    hibernate.ddl-auto: "create-drop"
+#
+#mpesa:
+#  consumerKey:
+#  consumerSecret:
+#  accessUrl:
